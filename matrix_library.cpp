@@ -1,143 +1,122 @@
-#include "matrix_library.h"
+#include "Matrix_Library.h"
 
-// --- MATRIX LOGIC ---
-Matrix addM(Matrix A, Matrix B, string &err) {
-    if (A.rows != B.rows || A.cols != B.cols) { err = "Error: Dimension mismatch for addition!"; return A; }
-    Matrix res = A;
-    for(int i=0; i<A.rows; i++) for(int j=0; j<A.cols; j++) res.data[i][j] += B.data[i][j];
-    return res;
+bool matrix_sum(const double a[][10], const double b[][10], double res[][10], int r1, int c1, int r2, int c2) {
+    if (r1 != r2 || c1 != c2) return false;
+    for (int i = 0; i < r1; i++)
+        for (int j = 0; j < c1; j++) res[i][j] = a[i][j] + b[i][j];
+    return true;
 }
-Matrix subM(Matrix A, Matrix B, string &err) {
-    if (A.rows != B.rows || A.cols != B.cols) { err = "Error: Dimension mismatch for subtraction!"; return A; }
-    Matrix res = A;
-    for(int i=0; i<A.rows; i++) for(int j=0; j<A.cols; j++) res.data[i][j] -= B.data[i][j];
-    return res;
+
+bool matrix_diff(const double a[][10], const double b[][10], double res[][10], int r1, int c1, int r2, int c2) {
+    if (r1 != r2 || c1 != c2) return false;
+    for (int i = 0; i < r1; i++)
+        for (int j = 0; j < c1; j++) res[i][j] = a[i][j] - b[i][j];
+    return true;
 }
-Matrix multiplyM(Matrix A, Matrix B, string &err) {
-    if (A.cols != B.rows) { err = "Error: Invalid dimensions for multiplication!"; return A; }
-    Matrix res; res.rows = A.rows; res.cols = B.cols;
-    for(int i=0; i<A.rows; i++) {
-        for(int j=0; j<B.cols; j++) {
-            res.data[i][j] = 0;
-            for(int k=0; k<A.cols; k++) res.data[i][j] += A.data[i][k] * B.data[k][j];
+
+bool matrix_prod(const double a[][10], const double b[][10], double res[][10], int r1, int c1, int r2, int c2) {
+    if (c1 != r2) return false;
+    for (int i = 0; i < r1; i++) {
+        for (int j = 0; j < c2; j++) {
+            res[i][j] = 0;
+            for (int k = 0; k < c1; k++) res[i][j] += a[i][k] * b[k][j];
         }
     }
-    return res;
+    return true;
 }
-Matrix scalarM(Matrix A, double k) {
-    for(int i=0; i<A.rows; i++) for(int j=0; j<A.cols; j++) A.data[i][j] *= k;
-    return A;
+
+void matrix_scale(const double a[][10], double res[][10], int r, int c, double k) {
+    for (int i = 0; i < r; i++)
+        for (int j = 0; j < c; j++) res[i][j] = a[i][j] * k;
 }
-Matrix transposeM(Matrix A) {
-    Matrix res; res.rows = A.cols; res.cols = A.rows;
-    for(int i=0; i<A.rows; i++) for(int j=0; j<A.cols; j++) res.data[j][i] = A.data[i][j];
-    return res;
+
+void matrix_flip(const double a[][10], double res[][10], int r, int c) {
+    for (int i = 0; i < r; i++)
+        for (int j = 0; j < c; j++) res[j][i] = a[i][j];
 }
-double determinantM(Matrix A, int n, string &err) {
-    if (A.rows != A.cols) { err = "Error: Determinant requires a square matrix!"; return 0; }
-    if (n == 1) return A.data[0][0];
-    if (n == 2) return (A.data[0][0]*A.data[1][1]) - (A.data[0][1]*A.data[1][0]);
-    double det = 0; Matrix sub;
+
+double matrix_det_calc(const double a[][10], int n) {
+    if (n == 1) return a[0][0];
+    if (n == 2) return (a[0][0] * a[1][1]) - (a[0][1] * a[1][0]);
+    double d = 0;
+    double sub[10][10];
     for (int x = 0; x < n; x++) {
-        int subi = 0;
+        int si = 0;
         for (int i = 1; i < n; i++) {
-            int subj = 0;
+            int sj = 0;
             for (int j = 0; j < n; j++) {
                 if (j == x) continue;
-                sub.data[subi][subj] = A.data[i][j];
-                subj++;
+                sub[si][sj] = a[i][j]; sj++;
             }
-            subi++;
+            si++;
         }
-        det += pow(-1, x) * A.data[0][x] * determinantM(sub, n-1, err);
+        d += ((x % 2 == 0) ? 1 : -1) * a[0][x] * matrix_det_calc(sub, n - 1);
     }
-    return det;
-}
-Matrix inverseM(Matrix A, string &err) {
-    double det = determinantM(A, A.rows, err);
-    if (abs(det) < 0.000001) { err = "Error: Singular matrix (Det=0), no inverse!"; return A; }
-    Matrix res; res.rows = 2; res.cols = 2; // For demonstration 2x2
-    res.data[0][0] = A.data[1][1]/det; res.data[0][1] = -A.data[0][1]/det;
-    res.data[1][0] = -A.data[1][0]/det; res.data[1][1] = A.data[0][0]/det;
-    return res;
-}
-
-// --- VECTOR LOGIC ---
-Vector addV(Vector v1, Vector v2, string &err) {
-    if(v1.size != v2.size) { err = "Error: Vector size mismatch!"; return v1; }
-    for(int i=0; i<v1.size; i++) v1.comp[i] += v2.comp[i];
-    return v1;
-}
-Vector subV(Vector v1, Vector v2, string &err) {
-    if(v1.size != v2.size) { err = "Error: Vector size mismatch!"; return v1; }
-    for(int i=0; i<v1.size; i++) v1.comp[i] -= v2.comp[i];
-    return v1;
-}
-Vector scalarV(Vector v, double k) {
-    for(int i=0; i<v.size; i++) v.comp[i] *= k;
-    return v;
-}
-double dotV(Vector v1, Vector v2, string &err) {
-    if(v1.size != v2.size) { err = "Error: Vector size mismatch!"; return 0; }
-    double d = 0; for(int i=0; i<v1.size; i++) d += v1.comp[i]*v2.comp[i];
     return d;
 }
-Vector crossV(Vector v1, Vector v2, string &err) {
-    if(v1.size != 3 || v2.size != 3) { err = "Error: Cross product only for 3D vectors!"; return v1; }
-    Vector r; r.size = 3;
-    r.comp[0] = v1.comp[1]*v2.comp[2] - v1.comp[2]*v2.comp[1];
-    r.comp[1] = v1.comp[2]*v2.comp[0] - v1.comp[0]*v2.comp[2];
-    r.comp[2] = v1.comp[0]*v2.comp[1] - v1.comp[1]*v2.comp[0];
-    return r;
-}
-double magnitudeV(Vector v) {
-    double s = 0; for(int i=0; i<v.size; i++) s += v.comp[i]*v.comp[i];
-    return sqrt(s);
-}
-Vector normalizeV(Vector v, string &err) {
-    double m = magnitudeV(v);
-    if(m < 0.000001) { err = "Error: Zero vector normalization!"; return v; }
-    return scalarV(v, 1.0/m);
+
+bool matrix_inv_calc(const double a[][10], double res[][10], int n) {
+    double det = matrix_det_calc(a, n);
+    if (abs(det) < 1e-10) return false;
+    double temp[10][10];
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            int r = 0;
+            for (int x = 0; x < n; x++) {
+                if (x == i) continue;
+                int c = 0;
+                for (int y = 0; y < n; y++) {
+                    if (y == j) continue;
+                    temp[r][c] = a[x][y]; c++;
+                }
+                r++;
+            }
+            res[j][i] = (((i + j) % 2 == 0) ? 1 : -1) * matrix_det_calc(temp, n - 1) / det;
+        }
+    }
+    return true;
 }
 
-// --- HTML HELPERS ---
-void startHTML(ofstream &f) {
-    f << "<!DOCTYPE html><html><head><meta charset='UTF-8'><style>"
-      << "body{font-family:Arial; text-align:center; background:#f4f4f4; color:#333;}"
-      << "header{background:#2c3e50; color:white; padding:20px; margin-bottom:20px;}"
-      << "section{background:white; width:70%; margin:20px auto; padding:15px; border-radius:10px; box-shadow:0 4px 8px rgba(0,0,0,0.1);}"
-      << "table{margin:10px auto; border-collapse:collapse;} td{padding:12px; border:1px solid #ccc; background:#fafafa;}"
-      << ".error{color:red; font-weight:bold;}</style></head><body>"
-      << "<header><h1>Engineering Math Report</h1></header>";
+bool vector_sum(const double v1[], const double v2[], double res[], int s1, int s2) {
+    if (s1 != s2) return false;
+    for (int i = 0; i < s1; i++) res[i] = v1[i] + v2[i];
+    return true;
 }
-void writeMatrixHTML(ofstream &f, Matrix M, string title, string err) {
-    f << "<section><h3>" << title << " (" << M.rows << "x" << M.cols << ")</h3>";
-    if(!err.empty()) f << "<p class='error'>" << err << "</p>";
-    else {
-        f << "<table>";
-        for(int i=0; i<M.rows; i++) {
-            f << "<tr>";
-            for(int j=0; j<M.cols; j++) f << "<td>" << M.data[i][j] << "</td>";
-            f << "</tr>";
-        }
-        f << "</table>";
-    }
-    f << "</section>";
+
+bool vector_diff(const double v1[], const double v2[], double res[], int s1, int s2) {
+    if (s1 != s2) return false;
+    for (int i = 0; i < s1; i++) res[i] = v1[i] - v2[i];
+    return true;
 }
-void writeVectorHTML(ofstream &f, Vector v, string title, string err) {
-    f << "<section><h3>" << title << "</h3>";
-    if(!err.empty()) f << "<p class='error'>" << err << "</p>";
-    else {
-        f << "<p>[ ";
-        for(int i=0; i<v.size; i++) f << v.comp[i] << (i==v.size-1 ? "" : ", ");
-        f << " ]</p>";
-    }
-    f << "</section>";
+
+void vector_scale(const double v[], double res[], int s, double k) {
+    for (int i = 0; i < s; i++) res[i] = v[i] * k;
 }
-void writeResultHTML(ofstream &f, string label, double val, string err) {
-    f << "<section><h3>" << label << "</h3>";
-    if(!err.empty()) f << "<p class='error'>" << err << "</p>";
-    else f << "<p><b>Result:</b> " << val << "</p>";
-    f << "</section>";
+
+double vector_dot_prod(const double v1[], const double v2[], int s1, int s2) {
+    if (s1 != s2) return 0;
+    double p = 0;
+    for (int i = 0; i < s1; i++) p += v1[i] * v2[i];
+    return p;
 }
-void endHTML(ofstream &f) { f << "<footer>Math Project 2026</footer></body></html>"; }
+
+bool vector_cross_prod(const double v1[], const double v2[], double res[], int s1, int s2) {
+    if (s1 != 3 || s2 != 3) return false;
+    res[0] = v1[1] * v2[2] - v1[2] * v2[1];
+    res[1] = v1[2] * v2[0] - v1[0] * v2[2];
+    res[2] = v1[0] * v2[1] - v1[1] * v2[0];
+    return true;
+}
+
+double vector_norm(const double v[], int s) {
+    double q = 0;
+    for (int i = 0; i < s; i++) q += v[i] * v[i];
+    return sqrt(q);
+}
+
+bool vector_unit_vec(const double v[], double res[], int s) {
+    double m = vector_norm(v, s);
+    if (m < 1e-10) return false;
+    for (int i = 0; i < s; i++) res[i] = v[i] / m;
+    return true;
+}
