@@ -1,76 +1,68 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <cmath>
-#include <vector>
+#include "Matrix_Library.h"
 
-using namespace std;
+void html_mat(ofstream& h, const double m[][10], int r, int c, string t, bool success) {
+    h << "<h4>" << t << "</h4>";
+    if (success) {
+        h << "<table border='1' style='border-collapse:collapse; text-align:center;'>";
+        for(int i = 0; i < r; i++) {
+            h << "<tr>";
+            for(int j = 0; j < c; j++) h << "<td style='padding:8px; width:45px;'>" << m[i][j] << "</td>";
+            h << "</tr>";
+        }
+        h << "</table><br>";
+    } else h << "<p style='color:red;'>Operation Impossible</p><br>";
+}
 
-#include "matrix_library.h"
+void html_vec(ofstream& h, const double v[], int s, string t, bool success) {
+    h << "<h4>" << t << "</h4>";
+    if (success) {
+        h << "<p style='background:#f9f9f9; padding:10px; display:inline-block;'>[ ";
+        for(int i = 0; i < s; i++) h << v[i] << (i == s - 1 ? "" : " , ");
+        h << " ]</p><br>";
+    } else h << "<p style='color:red;'>Dimension Error</p><br>";
+}
 
 int main() {
-    ofstream report("report_sample.html");
-    if (!report) {
-        cout << "Error creating file!" << endl;
-        return 1;
-    }
+    double mA[10][10], mB[10][10], mR[10][10], v1[10], v2[10], vR[10];
+    int rA=3, cA=3, rB=2, cB=2, sV=3; double k=2.5;
 
-    startHTML(report);
-    string err = "";
+    // Initialization
+    mA[0][0]=2; mA[0][1]=1; mA[0][2]=0; mA[1][0]=1; mA[1][1]=2; mA[1][2]=1; mA[2][0]=0; mA[2][1]=1; mA[2][2]=2;
+    mB[0][0]=1; mB[0][1]=0; mB[0][2]=1; mB[1][0]=0; mB[1][1]=1; mB[1][2]=0; mB[2][0]=1; mB[2][1]=0; mB[2][2]=1;
+    v1[0]=1; v1[1]=0; v1[2]=2; v2[0]=3; v2[1]=1; v2[2]=4;
 
-    // 1. Setup Input Data
-    Matrix A; A.rows=2; A.cols=2; A.data[0][0]=1; A.data[0][1]=2; A.data[1][0]=3; A.data[1][1]=4;
-    Matrix B; B.rows=2; B.cols=2; B.data[0][0]=5; B.data[0][1]=6; B.data[1][0]=7; B.data[1][1]=8;
+    ofstream out("report_sample.html");
+    out << "<html><body style='font-family:serif; padding:40px;'><h1>Matrix & Vector Analysis</h1><hr>";
 
-    Vector v1; v1.size=3; v1.comp[0]=1; v1.comp[1]=2; v1.comp[2]=3;
-    Vector v2; v2.size=3; v2.comp[0]=4; v2.comp[1]=5; v2.comp[2]=6;
+    // Step 1: Inputs
+    out << "<h2>1. Input Data</h2>";
+    html_mat(out, mA, rA, cA, "A =", true);
+    html_mat(out, mB, rB, cB, "B =", true);
+    html_vec(out, v1, sV, "v<sub>1</sub> =", true);
+    html_vec(out, v2, sV, "v<sub>2</sub> =", true);
+    out << "<p>k = " << k << "</p><hr><h2>2. Calculations</h2>";
 
-    // --- بخش نمایش ورودی‌ها (Input Data Section) ---
-    report << "<header style='background:#555;'><h2>Step 1: Input Data</h2></header>";
-    writeMatrixHTML(report, A, "Input Matrix A");
-    writeMatrixHTML(report, B, "Input Matrix B");
-    writeVectorHTML(report, v1, "Input Vector v1");
-    writeVectorHTML(report, v2, "Input Vector v2");
-    report << "<hr>";
+    // Step 2: 14 Operations with Symbols
+    html_mat(out, mR, rA, cA, "1) A + B =", matrix_sum(mA, mB, mR, rA, cA, rB, cB));
+    html_mat(out, mR, rA, cA, "2) A - B =", matrix_diff(mA, mB, mR, rA, cA, rB, cB));
+    html_mat(out, mR, rA, cB, "3) A &times; B =", matrix_prod(mA, mB, mR, rA, cA, rB, cB));
+    matrix_scale(mA, mR, rA, cA, k); html_mat(out, mR, rA, cA, "4) k &sdot; A =", true);
+    matrix_flip(mA, mR, rA, cA); html_mat(out, mR, cA, rA, "5) A<sup>T</sup> =", true);
+    out << "<h4>6) |A| = " << matrix_det_calc(mA, rA) << "</h4><br>";
+    html_mat(out, mR, rA, rA, "7) A<sup>-1</sup> =", matrix_inv_calc(mA, mR, rA));
 
-    // --- بخش عملیات ماتریسی (Matrix Operations) ---
-    report << "<header><h2>Step 2: Matrix Operations (7 Items)</h2></header>";
+    html_vec(out, vR, sV, "8) v<sub>1</sub> + v<sub>2</sub> =", vector_sum(v1, v2, vR, sV, sV));
+    html_vec(out, vR, sV, "9) v<sub>1</sub> - v<sub>2</sub> =", vector_diff(v1, v2, vR, sV, sV));
+    vector_scale(v1, vR, sV, k); html_vec(out, vR, sV, "10) k &sdot; v<sub>1</sub> =", true);
+    out << "<h4>11) v<sub>1</sub> &sdot; v<sub>2</sub> = " << vector_dot_prod(v1, v2, sV, sV) << "</h4><br>";
 
-    err=""; writeMatrixHTML(report, addM(A, B, err), "1. Addition (A+B)", err);
-    err=""; writeMatrixHTML(report, multiplyM(A, B, err), "2. Multiplication (A*B)", err);
 
-    // نکته: برای ضرب اسکالر، یک کپی از A می‌سازیم تا خود A برای مراحل بعد خراب نشود
-    Matrix A_copy = A;
-    writeMatrixHTML(report, scalarM(A_copy, 10), "3. Scalar Mult (A*10)");
+    html_vec(out, vR, 3, "12) v<sub>1</sub> &times; v<sub>2</sub> =", vector_cross_prod(v1, v2, vR, sV, sV));
+    out << "<h4>13) v<sub>1</sub> = " << vector_norm(v1, sV) << "</h4><br>";
+    if(vector_unit_vec(v1, vR, sV)) html_vec(out, vR, sV, "14) v&#770;<sub>1</sub> =", true);
 
-    err=""; writeMatrixHTML(report, subM(A, B, err), "4. Subtraction (A-B)", err);
-    writeMatrixHTML(report, transposeM(A), "5. Transpose of A");
-
-    err=""; writeResultHTML(report, "6. Determinant of A", determinantM(A, A.rows, err), err);
-    err=""; writeMatrixHTML(report, inverseM(A, err), "7. Inverse of A", err);
-
-    // --- بخش عملیات برداری (Vector Operations) ---
-    report << "<hr><header><h2>Step 3: Vector Operations (7 Items)</h2></header>";
-
-    err=""; writeVectorHTML(report, addV(v1, v2, err), "1. Vector Addition", err);
-    err=""; writeVectorHTML(report, subV(v1, v2, err), "2. Vector Subtraction", err);
-
-    Vector v1_copy = v1;
-    writeVectorHTML(report, scalarV(v1_copy, 5), "3. Scalar Mult (v1*5)");
-
-    err=""; writeResultHTML(report, "4. Dot Product", dotV(v1, v2, err), err);
-    err=""; writeVectorHTML(report, crossV(v1, v2, err), "5. Cross Product (v1 x v2)", err);
-    writeResultHTML(report, "6. Magnitude of v1", magnitudeV(v1));
-
-    err=""; writeVectorHTML(report, normalizeV(v1, err), "7. Normalization (Unit Vector)", err);
-
-    endHTML(report);
-    report.close();
-
-    cout << "========================================" << endl;
-    cout << "  Success! Full Report Generated." << endl;
-    cout << "  Check 'report_sample.html' now." << endl;
-    cout << "========================================" << endl;
-
+    out << "</body></html>";
+    out.close();
+    cout << "Final Report generated as report.html" << endl;
     return 0;
 }
