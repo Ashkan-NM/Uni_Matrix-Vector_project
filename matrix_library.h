@@ -3,46 +3,27 @@
 
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <cmath>
-#include <vector>
+#include <string>
 
 using namespace std;
 
-// Data Structures
-struct Matrix {
-    double data[10][10];
-    int rows, cols;
-};
+// Matrix Operations
+bool matrix_sum(const double a[][10], const double b[][10], double res[][10], int r1, int c1, int r2, int c2);
+bool matrix_diff(const double a[][10], const double b[][10], double res[][10], int r1, int c1, int r2, int c2);
+bool matrix_prod(const double a[][10], const double b[][10], double res[][10], int r1, int c1, int r2, int c2);
+void matrix_scale(const double a[][10], double res[][10], int r, int c, double k);
+void matrix_flip(const double a[][10], double res[][10], int r, int c);
+double matrix_det_calc(const double a[][10], int n);
+bool matrix_inv_calc(const double a[][10], double res[][10], int n);
 
-struct Vector {
-    double comp[10];
-    int size;
-};
-
-// --- Matrix Functions (7 Items) ---
-Matrix addM(Matrix A, Matrix B, string &err);
-Matrix subM(Matrix A, Matrix B, string &err);
-Matrix multiplyM(Matrix A, Matrix B, string &err);
-Matrix scalarM(Matrix A, double k);
-Matrix transposeM(Matrix A);
-double determinantM(Matrix A, int n, string &err);
-Matrix inverseM(Matrix A, string &err);
-
-// --- Vector Functions (7 Items) ---
-Vector addV(Vector v1, Vector v2, string &err);
-Vector subV(Vector v1, Vector v2, string &err);
-Vector scalarV(Vector v, double k);
-double dotV(Vector v1, Vector v2, string &err);
-Vector crossV(Vector v1, Vector v2, string &err);
-double magnitudeV(Vector v);
-Vector normalizeV(Vector v, string &err);
-
-// --- HTML Report Helpers ---
-void startHTML(ofstream &f);
-void writeMatrixHTML(ofstream &f, Matrix M, string title, string err = "");
-void writeVectorHTML(ofstream &f, Vector v, string title, string err = "");
-void writeResultHTML(ofstream &f, string label, double val, string err = "");
-void endHTML(ofstream &f);
+// Vector Operations
+bool vector_sum(const double v1[], const double v2[], double res[], int s1, int s2);
+bool vector_diff(const double v1[], const double v2[], double res[], int s1, int s2);
+void vector_scale(const double v[], double res[], int s, double k);
+double vector_dot_prod(const double v1[], const double v2[], int s1, int s2);
+bool vector_cross_prod(const double v1[], const double v2[], double res[], int s1, int s2);
+double vector_norm(const double v[], int s);
+bool vector_unit_vec(const double v[], double res[], int s);
 
 #endif
